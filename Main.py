@@ -53,6 +53,11 @@ class GTTMaker:
         self.per_user_guesses = {}
         self.words_guessed = []
 
+    def Add_Points(self, player_id, amount = int):
+        player_score = self.local_scores.get(str(player_id), 0)
+        self.local_scores[str(player_id)] = player_score + 1 
+
+
 class AnswerContainer:
     def __init__(self, answer: str):
         cleaned_answer = Cleaner.clean_string(answer)
@@ -125,13 +130,7 @@ async def answer(interaction: discord.Interaction, answer: str):
 
     # Check if the answer is right
     if sorted(user_answer.answer_split) == sorted(Current_Server.answer_split):
-        print(Current_Server.local_scores)
-        user_score = Current_Server.local_scores.get(str(user_id), 0)
-        print(user_score)
-        print(Current_Server.local_scores)
-        Current_Server.local_scores[str(user_id)] = user_score + 1
-        print(Current_Server.local_scores[str(user_id)])
-        print(Current_Server.local_scores)
+        Current_Server.Add_Score(user_id, 1)
         await send_image(interaction, f"Correct! The answer was: {Current_Server.answer_capped}, How about this one?")
         print(Current_Server.local_scores)
         return
