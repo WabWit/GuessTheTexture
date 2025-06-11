@@ -102,27 +102,30 @@ async def answer(interaction: discord.Interaction, answer: str):
     Current_Server.total_guesses += 1
 
     # Number of guess detection
-    GuessIndicator = "You have guessed one times"
+    GuessIndicator = ""
     amount_of_guessses = Current_Server.per_user_guesses.get(str(user_id), 0)
     if amount_of_guessses == 3:
-        await interaction.followup.send("You're out of guesses buckaroo")
+        await interaction.followup.send("You're out of guesses buckaroo.")
         return
     
     if amount_of_guessses == 2:
-        GuessIndicator = "You're out of guesses"
+        GuessIndicator = "You're out of guesses. "
     if amount_of_guessses == 1:
-        GuessIndicator = "You have one guess left"
+        GuessIndicator = "You have one guess left. "
     Current_Server.per_user_guesses[str(user_id)] = amount_of_guessses + 1
 
     # Check if the answer is right
     if sorted(user_answer.answer_split) == sorted(Current_Server.answer_split):
         await send_image(interaction, "Correct! How about this one?")
         return
+    right_words = list(set(Current_Server.answer_split) & set(user_answer.answer_split))
+    Current_Server.words_guessed = list(set(right_words) | set(Current_Server.words_guessed))
     
-    Current_Server.words_guessed = list((set(Current_Server.answer_split) & set(user_answer.answer_split)) | set(Current_Server.words_guessed))
     print(Current_Server.answer_split, user_answer.answer_split, Current_Server.words_guessed)
-
-    await interaction.followup.send(GuessIndicator)
+    if right_words == []:
+        await interaction.followup.send(f"Incorrect. {GuessIndicator}")
+        return
+    await interaction.followup.send(f"Incorrect. {GuessIndicator}Correct words: {' '.join(right_words)}")
     
 # Sends image
 async def send_image(interaction: discord.Interaction, message):

@@ -3,17 +3,18 @@ import re
 
 def convert_potion_name(filename):
     patterns = [
-        (r"potion__\{'minecraft__potion_contents'__\{potion__'minecraft__(.*?)'", "minecraft__potion_{}"),
-        (r"lingering_potion__\{'minecraft__potion_contents'__\{potion__'minecraft__(.*?)'", "minecraft__lingering_potion_{}"),
-        (r"splash_potion__\{'minecraft__potion_contents'__\{potion__'minecraft__(.*?)'", "minecraft__splash_potion_{}"),
-        (r"tipped_arrow__\{'minecraft__potion_contents'__\{potion__'minecraft__(.*?)'", "minecraft__tipped_arrow_{}")
+        (r"(potion)__\{'minecraft__potion_contents'__\{potion__'minecraft__(.*?)'", "minecraft__{}_{}"),
+        (r"(lingering_potion)__\{'minecraft__potion_contents'__\{potion__'minecraft__(.*?)'", "minecraft__{}_{}"),
+        (r"(splash_potion)__\{'minecraft__potion_contents'__\{potion__'minecraft__(.*?)'", "minecraft__{}_{}"),
+        (r"(tipped_arrow)__\{'minecraft__potion_contents'__\{potion__'minecraft__(.*?)'", "minecraft__{}_{}")
     ]
 
     for pattern, format_str in patterns:
         match = re.search(pattern, filename)
         if match:
             potion_type = match.group(1)
-            return format_str.format(potion_type) + ".png"
+            effect = match.group(2)
+            return format_str.format(potion_type, effect) + ".png"
 
     raise ValueError(f"No matching pattern for: {filename}")
 
@@ -35,5 +36,5 @@ def rename_all_potion_files(folder_path):
                 print(f"Skipping {filename}: {e}")
 
 # Example usage
-folder_path = "./IMAGESET_VANILLA"  # Replace with your actual folder path
+folder_path = "./Afolder"  # Replace with your actual folder path
 rename_all_potion_files(folder_path)
