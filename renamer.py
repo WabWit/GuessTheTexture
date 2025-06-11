@@ -1,22 +1,22 @@
 import os
-import re
 
 def convert_potion_name(filename):
-    patterns = [
-        (r"(potion)__\{'minecraft__potion_contents'__\{potion__'minecraft__(.*?)'", "minecraft__{}_{}"),
-        (r"(lingering_potion)__\{'minecraft__potion_contents'__\{potion__'minecraft__(.*?)'", "minecraft__{}_{}"),
-        (r"(splash_potion)__\{'minecraft__potion_contents'__\{potion__'minecraft__(.*?)'", "minecraft__{}_{}"),
-        (r"(tipped_arrow)__\{'minecraft__potion_contents'__\{potion__'minecraft__(.*?)'", "minecraft__{}_{}")
-    ]
+    if not filename.endswith(".png"):
+        raise ValueError("File must be a .png")
 
-    for pattern, format_str in patterns:
-        match = re.search(pattern, filename)
-        if match:
-            potion_type = match.group(1)
-            effect = match.group(2)
-            return format_str.format(potion_type, effect) + ".png"
+    base_name = filename[:-4]  # Remove .png
 
-    raise ValueError(f"No matching pattern for: {filename}")
+    if "__{'minecraft__potion_contents'__{potion__'minecraft__" not in base_name:
+        raise ValueError("Filename structure not recognized")
+
+    parts = base_name.split("__{'minecraft__potion_contents'__{potion__'minecraft__")
+    if len(parts) != 2:
+        raise ValueError("Unexpected structure in filename")
+
+    item_type = parts[0]  # e.g., minecraft__splash_potion
+    effect = parts[1].rstrip("'}")  # Remove trailing "'}"
+
+    return f"{item_type}_{effect}.png"
 
 def rename_all_potion_files(folder_path):
     for filename in os.listdir(folder_path):

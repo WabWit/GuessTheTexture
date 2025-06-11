@@ -9,7 +9,7 @@ TOKEN = os.getenv('TOKEN')
 
 GTTServers = {} #creates a container for servers
 IMAGESET_VANILLA = []
-
+Admins = [292608557335969793]
 #Get imagelist
 IMAGESET_VANILLA = []
 with open("filenames.txt") as image_set_list:
@@ -74,6 +74,9 @@ async def on_ready():
 
 @bot.tree.command(name="quit", description="back to the gulag")
 async def exit(interaction : discord.Interaction):
+    perms = await Check_Perms(interaction, "Admin")
+    if perms:
+        return
     print(f"Bot shutting down blame {interaction.user.display_name} from {interaction.guild.name}")
     await interaction.response.send_message("Shutting Down")
     await quit()
@@ -83,6 +86,12 @@ async def exit(interaction : discord.Interaction):
 #sending a picture
 @bot.tree.command(name="image", description="Bumps the current image")
 async def image(interaction: discord.Interaction):
+    print("hi")
+    perms = await Check_Perms(interaction, "Admin")
+    print("hey")
+    if perms:
+        print("ho")
+        return
     await interaction.response.defer(ephemeral=False)
     await send_image(interaction, "Guess this image:")
 
@@ -100,7 +109,7 @@ async def answer(interaction: discord.Interaction, answer: str):
         await interaction.followup.send("No Active GTT game")
         return
     Current_Server.total_guesses += 1
-
+    print(Current_Server.local_scores)
     # Number of guess detection
     GuessIndicator = ""
     amount_of_guessses = Current_Server.per_user_guesses.get(str(user_id), 0)
@@ -116,7 +125,15 @@ async def answer(interaction: discord.Interaction, answer: str):
 
     # Check if the answer is right
     if sorted(user_answer.answer_split) == sorted(Current_Server.answer_split):
-        await send_image(interaction, "Correct! How about this one?")
+        print(Current_Server.local_scores)
+        user_score = Current_Server.local_scores.get(str(user_id), 0)
+        print(user_score)
+        print(Current_Server.local_scores)
+        Current_Server.local_scores[str(user_id)] = user_score + 1
+        print(Current_Server.local_scores[str(user_id)])
+        print(Current_Server.local_scores)
+        await send_image(interaction, f"Correct! The answer was: {Current_Server.answer_capped}, How about this one?")
+        print(Current_Server.local_scores)
         return
     right_words = list(set(Current_Server.answer_split) & set(user_answer.answer_split))
     Current_Server.words_guessed = list(set(right_words) | set(Current_Server.words_guessed))
@@ -126,6 +143,21 @@ async def answer(interaction: discord.Interaction, answer: str):
         await interaction.followup.send(f"Incorrect. {GuessIndicator}")
         return
     await interaction.followup.send(f"Incorrect. {GuessIndicator}Correct words: {' '.join(right_words)}")
+
+@bot.tree.command(name="score", description="amogus")
+async def score(interaction: discord.Interaction, player: str):
+    await interaction.response.defer(ephemeral=False)
+    guild_id = interaction.guild_id 
+    user_id = interaction.user.id
+    Current_Server = GTTServers.get(str(guild_id))
+    # return if no active game
+    if Current_Server == None:
+        await interaction.followup.send("No Active GTT game")
+        return
+    player_score = Current_Server.local_scores.get(str(user_id), 0)
+    await interaction.followup.send(f"Your score is {player_score}")
+
+
     
 # Sends image
 async def send_image(interaction: discord.Interaction, message):
@@ -142,5 +174,10 @@ async def send_image(interaction: discord.Interaction, message):
 
     await interaction.followup.send(message,file=GTT_Image)
 
+async def Check_Perms(interaction, type = "Admin"):
+    if type == "Admin":
+        if interaction.user.id not in Admins:
+            await interaction.followup.send("You aint no admin!")
+            return False
 # Start the bot
 bot.run(TOKEN)
