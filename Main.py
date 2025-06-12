@@ -33,6 +33,7 @@ async def on_ready():
 
 @bot.tree.command(name="quit", description="back to the gulag")
 async def exit(interaction : discord.Interaction):
+    await interaction.response.defer()
     perms = await Check_Perms(interaction, "Admin")
     if perms:
         return
@@ -43,31 +44,30 @@ async def exit(interaction : discord.Interaction):
         dump[str(guild_id)] = GTTServers[str(guild_id)].local_scores
     with open("GTTServers.json", "w") as ServersFile:
         json.dump(dump, ServersFile)
-    await interaction.response.send_message("Shutting Down")
+    await interaction.followup.send("Shutting Down")
     await quit()
-
-# ALL COMMANDS FOR NORMAL PLAYERS
 
 @bot.tree.command(name="start", description="Starts a GTT Game - Admin Only")
 async def start(interaction: discord.Interaction):
     perms = await Check_Perms(interaction, "Admin")
-    await interaction.response.defer(ephemeral=False)
     if perms:
         await interaction.followup.send("NUH UH")
         return
+    await interaction.response.defer()
     await roll_send_image(interaction, "Guess this image:")
 
+# ALL COMMANDS FOR NORMAL PLAYERS
 #sending a picture
 @bot.tree.command(name="image", description="Bumps the current image")
 async def image(interaction: discord.Interaction):
-    await interaction.response.defer(ephemeral=False)
+    await interaction.response.defer()
     await send_image(interaction, "Here is the image:")
 
 #answer command
 @bot.tree.command(name="answer", description="are you sure?")
 async def answer(interaction: discord.Interaction, answer: str):
     # tells discord that i gotchu and wait fo me
-    await interaction.response.defer(ephemeral=False)
+    await interaction.response.defer()
     guild_id = interaction.guild_id 
     user_id = interaction.user.id
     user_answer = GTTUtils.AnswerContainer(answer)
@@ -106,24 +106,38 @@ async def answer(interaction: discord.Interaction, answer: str):
         return
     await interaction.followup.send(f"Incorrect. {GuessIndicator}Correct words: {' '.join(right_words)}")
 
-    if Current_Server.total_guesses >= 2: # for hints
-        hint_string = ""
-        possible_hints = Hint.HintChecker(Current_Server.answer)
-        if possible_hints[0]:
-            hint_string = random.choice(possible_hints)
+    if Current_Server.total_guesses < 2: # for hints
+        return
+     
+    hint_string = ""
+    possible_hints = Hint.HintChecker(Current_Server.answer)
+    if possible_hints[0]:
+        hint_string = random.choice(possible_hints)
+    else:
+        not_found = list(set(Current_Server.answer_split) - set(Current_Server.words_guessed))
+        if not_found == []:
+            hint_string = "All words have been found"
+        elif len(not_found) == 1:
+            word = not_found[0]
+            string_length = len(word)
+            hint_split = list(word)
+            # Clamp number of characters to replace
+            num_to_replace = int(string_length / 2)
+            indices = random.sample(range(string_length), k=num_to_replace)
+            for i in indices:
+                hint_split[i] = "_"
+
+            hint_joined = ''.join(hint_split)
+            hint_string = discord.utils.escape_markdown(f"The final word is {hint_joined}.")
         else:
-            not_found = list(set(Current_Server.answer_split) - set(Current_Server.words_guessed))
-            if not_found == []:
-                hint_string = "All words have been found"
-            else:
-                hint_string = random.choice(not_found)
-            
-        await interaction.followup.send(f"Looks like yall are having trouble, heres a hint: {hint_string}")
+            hint_string = random.choice(not_found)
+        
+    await interaction.followup.send(f"Looks like yall are having trouble, heres a hint: {hint_string}")
 
 #check score, broke btw so go fix mofo
 @bot.tree.command(name="score", description="Checks a player's score")
 async def score(interaction: discord.Interaction):
-    await interaction.response.defer(ephemeral=False)
+    await interaction.response.defer()
     guild_id = interaction.guild_id 
     user_id = interaction.user.id
     Current_Server = GTTServers.get(str(guild_id))
@@ -160,12 +174,14 @@ async def send_image(interaction: discord.Interaction, message):
         GTTServers[str(guild_id)] = GTTUtils.GTTMaker()
         await interaction.followup.send("No Active GTT Game")
         return
-
     CurrentServer = GTTServers.get(str(guild_id)) # Access the GTT game for that server
     if CurrentServer.original == None: # To see if there is a game that has started
         await interaction.followup.send("No Active GTT Game")
         return
-    
+    if int(time.time()) <= int(CurrentServer.time_list["Debounce"] + 10):
+        await interaction.followup.send("Too Fast!", ephemeral=True)
+        return
+    CurrentServer.TimeReset(["Debounce"])
     print(CurrentServer)
     print(interaction.guild.name)
     GTT_Image = discord.File(filename="Dont_Cheese_XD.png", spoiler= False, fp=f"IMAGESET_VANILLA/{CurrentServer.original}")
