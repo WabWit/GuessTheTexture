@@ -51,9 +51,10 @@ async def exit(interaction : discord.Interaction):
 @bot.tree.command(name="start", description="Starts a GTT Game - Admin Only")
 async def start(interaction: discord.Interaction):
     perms = await Check_Perms(interaction, "Admin")
-    if perms:
-        return
     await interaction.response.defer(ephemeral=False)
+    if perms:
+        await interaction.followup.send("NUH UH")
+        return
     await roll_send_image(interaction, "Guess this image:")
 
 #sending a picture
@@ -108,8 +109,15 @@ async def answer(interaction: discord.Interaction, answer: str):
     if Current_Server.total_guesses >= 2: # for hints
         hint_string = ""
         possible_hints = Hint.HintChecker(Current_Server.answer)
-        if possible_hints:
+        if possible_hints[0]:
             hint_string = random.choice(possible_hints)
+        else:
+            not_found = list(set(Current_Server.answer_split) - set(Current_Server.words_guessed))
+            if not_found == []:
+                hint_string = "All words have been found"
+            else:
+                hint_string = random.choice(not_found)
+            
         await interaction.followup.send(f"Looks like yall are having trouble, heres a hint: {hint_string}")
 
 #check score, broke btw so go fix mofo
@@ -147,9 +155,8 @@ async def roll_send_image(interaction: discord.Interaction, message):
 # bumps the image
 async def send_image(interaction: discord.Interaction, message):
     guild_id = interaction.guild_id
-    user_id = interaction.user.id
 
-    if GTTServers.get(guild_id) == None: # Makes the GTT game for that server if it dosnest exist
+    if GTTServers.get(str(guild_id)) == None: # Makes the GTT game for that server if it dosnest exist
         GTTServers[str(guild_id)] = GTTUtils.GTTMaker()
         await interaction.followup.send("No Active GTT Game")
         return
