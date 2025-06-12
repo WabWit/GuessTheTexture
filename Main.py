@@ -1,19 +1,13 @@
 from dotenv import load_dotenv
-import os, json, math, asyncio, time, random, Hint, Cleaner, discord
+import os, json, math, asyncio, time, random, Hint, Cleaner, discord, GTTUtils
 from discord.ext import commands
 
 # Load your token from .env file
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
 
-
 GTTServers = {} #creates a container for servers
-IMAGESET_VANILLA = []
 Admins = [292608557335969793]
-#Get imagelist
-IMAGESET_VANILLA = []
-with open("filenames.txt") as image_set_list:
-    IMAGESET_VANILLA = image_set_list.read().split("\n")
 
 # Setup Discord bot with all intents
 intents = discord.Intents.all()
@@ -21,53 +15,6 @@ intents.message_content = True
 
 # Create the bot with a prefix (for compatibility with text commands)
 bot = commands.Bot(command_prefix=",", intents=intents)
-
-# GTT per server class objecter
-class GTTMaker:
-    def __init__(self):
-        self.original = ""
-        self.answer = ""
-        self.answer_capped = ""
-        self.answer_split = []
-        self.total_guesses = 0
-        self.per_user_guesses = {}
-        self.words_guessed = []
-        self.time_started = int(time.time())
-        self.local_scores = {}
-    
-    def __str__(self):
-        return f"Answer: {self.answer} \nAnswer Array: {self.answer_split} \nAnswer Readable: {self.answer_capped}"
-
-    def Roll(self):
-        answer = random.choice(IMAGESET_VANILLA)
-        cleaned_answer = Cleaner.clean_string(answer)
-        self.original = answer
-        self.answer = cleaned_answer
-        self.answer_split = cleaned_answer.split()
-        self.answer_capped = cleaned_answer.title()
-    
-    def Reset(self):
-        self.Roll()
-        self.time_started = int(time.time())
-        self.total_guesses = 0
-        self.per_user_guesses = {}
-        self.words_guessed = []
-
-    def Add_Points(self, player_id, amount = int):
-        player_score = self.local_scores.get(str(player_id), 0)
-        self.local_scores[str(player_id)] = player_score + 1 
-
-
-class AnswerContainer:
-    def __init__(self, answer: str):
-        cleaned_answer = Cleaner.clean_string(answer)
-        self.answer = cleaned_answer
-        self.answer_split = cleaned_answer.split()
-        self.answer_capped = cleaned_answer.title()
-    
-    def __str__(self):
-        return f"Answer: {self.answer} \nAnswer Array: {self.answer_split} \nAnswer Readable: {self.answer_capped}"
-
 
 # Slash command registration (sync)
 @bot.event
@@ -88,17 +35,19 @@ async def exit(interaction : discord.Interaction):
 
 # ALL COMMANDS FOR NORMAL PLAYERS
 
+@bot.tree.command(name="start", description="Bumps the current image")
+async def start(interaction: discord.Interaction):
+    perms = await Check_Perms(interaction, "Admin")
+    if perms:
+        return
+    await interaction.response.defer(ephemeral=False)
+    await roll_send_image(interaction, "Guess this image:")
+
 #sending a picture
 @bot.tree.command(name="image", description="Bumps the current image")
 async def image(interaction: discord.Interaction):
-    print("hi")
-    perms = await Check_Perms(interaction, "Admin")
-    print("hey")
-    if perms:
-        print("ho")
-        return
     await interaction.response.defer(ephemeral=False)
-    await send_image(interaction, "Guess this image:")
+    await send_image(interaction, "Here is the image:")
 
 #answer command
 @bot.tree.command(name="answer", description="amogus")
@@ -107,7 +56,7 @@ async def answer(interaction: discord.Interaction, answer: str):
     await interaction.response.defer(ephemeral=False)
     guild_id = interaction.guild_id 
     user_id = interaction.user.id
-    user_answer = AnswerContainer(answer)
+    user_answer = GTTUtils.AnswerContainer(answer)
     Current_Server = GTTServers.get(str(guild_id))
     # return if no active game
     if Current_Server == None:
@@ -131,18 +80,26 @@ async def answer(interaction: discord.Interaction, answer: str):
     # Check if the answer is right
     if sorted(user_answer.answer_split) == sorted(Current_Server.answer_split):
         Current_Server.Add_Score(user_id, 1)
-        await send_image(interaction, f"Correct! The answer was: {Current_Server.answer_capped}, How about this one?")
+        await roll_send_image(interaction, f"Correct! The answer was: {Current_Server.answer_capped}, How about this one?")
         print(Current_Server.local_scores)
         return
     right_words = list(set(Current_Server.answer_split) & set(user_answer.answer_split))
     Current_Server.words_guessed = list(set(right_words) | set(Current_Server.words_guessed))
     
     print(Current_Server.answer_split, user_answer.answer_split, Current_Server.words_guessed)
-    if right_words == []:
+    if right_words == []: #just sees if u r so incredibly wrong and does an early return
         await interaction.followup.send(f"Incorrect. {GuessIndicator}")
         return
     await interaction.followup.send(f"Incorrect. {GuessIndicator}Correct words: {' '.join(right_words)}")
 
+    if Current_Server.total_guesses >= 2: # for hints
+        hint_string = ""
+        possible_hints = Hint.HintChecker(Current_Server.answer)
+        if possible_hints:
+            hint_string = random.choice(possible_hints)
+        await interaction.followup.send(f"Looks like yall are having trouble, heres a hint: {hint_string}")
+
+#check score, broke btw so go fix mofo
 @bot.tree.command(name="score", description="amogus")
 async def score(interaction: discord.Interaction, player: str):
     await interaction.response.defer(ephemeral=False)
@@ -151,20 +108,20 @@ async def score(interaction: discord.Interaction, player: str):
     Current_Server = GTTServers.get(str(guild_id))
     # return if no active game
     if Current_Server == None:
-        await interaction.followup.send("No Active GTT game")
+        await interaction.followup.send("No Active GTT Game")
         return
     player_score = Current_Server.local_scores.get(str(user_id), 0)
     await interaction.followup.send(f"Your score is {player_score}")
 
+# Async Functions
 
-    
-# Sends image
-async def send_image(interaction: discord.Interaction, message):
+# rerolls and sends image
+async def roll_send_image(interaction: discord.Interaction, message):
     guild_id = interaction.guild_id
     user_id = interaction.user.id
 
     if GTTServers.get(guild_id) == None: # Makes the GTT game for that server if it dosnest exist
-        GTTServers[str(guild_id)] = GTTMaker()
+        GTTServers[str(guild_id)] = GTTUtils.GTTMaker()
     CurrentServer = GTTServers.get(str(guild_id)) # Access the GTT game for that server
     CurrentServer.Reset()
     print(CurrentServer)
@@ -173,6 +130,28 @@ async def send_image(interaction: discord.Interaction, message):
 
     await interaction.followup.send(message,file=GTT_Image)
 
+# bumps the image
+async def send_image(interaction: discord.Interaction, message):
+    guild_id = interaction.guild_id
+    user_id = interaction.user.id
+
+    if GTTServers.get(guild_id) == None: # Makes the GTT game for that server if it dosnest exist
+        GTTServers[str(guild_id)] = GTTUtils.GTTMaker()
+        await interaction.followup.send("No Active GTT Game")
+        return
+
+    CurrentServer = GTTServers.get(str(guild_id)) # Access the GTT game for that server
+    if CurrentServer.original == None: # To see if there is a game that has started
+        await interaction.followup.send("No Active GTT Game")
+        return
+    
+    print(CurrentServer)
+    print(interaction.guild.name)
+    GTT_Image = discord.File(filename="Dont_Cheese_XD.png", spoiler= False, fp=f"IMAGESET_VANILLA/{CurrentServer.original}")
+
+    await interaction.followup.send(message,file=GTT_Image)
+
+# check permisions, return false if nuh uh
 async def Check_Perms(interaction, type = "Admin"):
     if type == "Admin":
         if interaction.user.id not in Admins:
