@@ -6,7 +6,7 @@ with open("filenames.txt") as image_set_list:
 
 # GTT per server class objecter
 class GTTMaker:
-    def __init__(self):
+    def __init__(self, local_scores = {}):
         print("initialized")
         self.original = ""
         self.answer = ""
@@ -16,7 +16,7 @@ class GTTMaker:
         self.per_user_guesses = {}
         self.words_guessed = []
         self.time_started = int(time.time())
-        self.local_scores = {}
+        self.local_scores = local_scores
     
     def __str__(self):
         return f"Answer: {self.answer} \nAnswer Array: {self.answer_split} \nAnswer Readable: {self.answer_capped}"

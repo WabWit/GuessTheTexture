@@ -9,6 +9,13 @@ TOKEN = os.getenv('TOKEN')
 GTTServers = {} #creates a container for servers
 Admins = [292608557335969793]
 
+# Check if a save file exists and use it
+SERVER_SAVED_SCORES = {}
+with open(f"GTTServers.json", "r") as file:
+    SERVER_SAVED_SCORES = json.load(file)
+for guild_id in SERVER_SAVED_SCORES.keys():
+    GTTServers[guild_id] = GTTUtils.GTTMaker(SERVER_SAVED_SCORES[guild_id])
+
 # Setup Discord bot with all intents
 intents = discord.Intents.all()
 intents.message_content = True
@@ -30,6 +37,12 @@ async def exit(interaction : discord.Interaction):
     if perms:
         return
     print(f"Bot shutting down blame {interaction.user.display_name} from {interaction.guild.name}")
+
+    dump = {}
+    for guild_id in GTTServers.keys():
+        dump[str(guild_id)] = GTTServers[str(guild_id)].local_scores
+    with open("GTTServers.json", "w") as ServersFile:
+        json.dump(dump, ServersFile)
     await interaction.response.send_message("Shutting Down")
     await quit()
 
@@ -101,7 +114,7 @@ async def answer(interaction: discord.Interaction, answer: str):
 
 #check score, broke btw so go fix mofo
 @bot.tree.command(name="score", description="Checks a player's score")
-async def score(interaction: discord.Interaction, player: str):
+async def score(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=False)
     guild_id = interaction.guild_id 
     user_id = interaction.user.id
@@ -110,6 +123,7 @@ async def score(interaction: discord.Interaction, player: str):
     if Current_Server == None:
         await interaction.followup.send("No Active GTT Game")
         return
+    
     player_score = Current_Server.local_scores.get(str(user_id), 0)
     await interaction.followup.send(f"Your score is {player_score}")
 
