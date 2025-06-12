@@ -77,7 +77,6 @@ async def answer(interaction: discord.Interaction, answer: str):
         await interaction.followup.send("No Active GTT game")
         return
     Current_Server.total_guesses += 1
-    print(Current_Server.local_scores)
     # Number of guess detection
     GuessIndicator = ""
     amount_of_guessses = Current_Server.per_user_guesses.get(str(user_id), 0)
