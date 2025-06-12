@@ -7,6 +7,7 @@ with open("filenames.txt") as image_set_list:
 # GTT per server class objecter
 class GTTMaker:
     def __init__(self):
+        print("initialized")
         self.original = ""
         self.answer = ""
         self.answer_capped = ""

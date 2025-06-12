@@ -35,7 +35,7 @@ async def exit(interaction : discord.Interaction):
 
 # ALL COMMANDS FOR NORMAL PLAYERS
 
-@bot.tree.command(name="start", description="Bumps the current image")
+@bot.tree.command(name="start", description="Starts a GTT Game - Admin Only")
 async def start(interaction: discord.Interaction):
     perms = await Check_Perms(interaction, "Admin")
     if perms:
@@ -50,7 +50,7 @@ async def image(interaction: discord.Interaction):
     await send_image(interaction, "Here is the image:")
 
 #answer command
-@bot.tree.command(name="answer", description="amogus")
+@bot.tree.command(name="answer", description="are you sure?")
 async def answer(interaction: discord.Interaction, answer: str):
     # tells discord that i gotchu and wait fo me
     await interaction.response.defer(ephemeral=False)
@@ -79,7 +79,7 @@ async def answer(interaction: discord.Interaction, answer: str):
 
     # Check if the answer is right
     if sorted(user_answer.answer_split) == sorted(Current_Server.answer_split):
-        Current_Server.Add_Score(user_id, 1)
+        Current_Server.Add_Points(user_id, 1)
         await roll_send_image(interaction, f"Correct! The answer was: {Current_Server.answer_capped}, How about this one?")
         print(Current_Server.local_scores)
         return
@@ -100,7 +100,7 @@ async def answer(interaction: discord.Interaction, answer: str):
         await interaction.followup.send(f"Looks like yall are having trouble, heres a hint: {hint_string}")
 
 #check score, broke btw so go fix mofo
-@bot.tree.command(name="score", description="amogus")
+@bot.tree.command(name="score", description="Checks a player's score")
 async def score(interaction: discord.Interaction, player: str):
     await interaction.response.defer(ephemeral=False)
     guild_id = interaction.guild_id 
@@ -120,7 +120,7 @@ async def roll_send_image(interaction: discord.Interaction, message):
     guild_id = interaction.guild_id
     user_id = interaction.user.id
 
-    if GTTServers.get(guild_id) == None: # Makes the GTT game for that server if it dosnest exist
+    if GTTServers.get(str(guild_id)) == None: # Makes the GTT game for that server if it dosnest exist
         GTTServers[str(guild_id)] = GTTUtils.GTTMaker()
     CurrentServer = GTTServers.get(str(guild_id)) # Access the GTT game for that server
     CurrentServer.Reset()
