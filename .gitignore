@@ -1,6 +1,7 @@
-IMAGESET_VANILLA/
+/IMAGESET_VANILLA/
 *.env
-__pycache__/
-__pycache__/Hint.cpython-313.pyc
-renamer.py
-filetotxt.py
+/__pycache__/
+/__pycache__/Hint.cpython-313.pyc
+/renamer.py
+/filetotxt.py
+/GTTServers.json

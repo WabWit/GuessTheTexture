@@ -40,7 +40,7 @@ class GTTMaker:
         self.per_user_guesses = {}
         self.words_guessed = []
 
-    def Add_Points(self, player_id, amount = int):
+    def AddPoints(self, player_id, amount = int):
         player_score = self.local_scores.get(str(player_id), 0)
         self.local_scores[str(player_id)] = player_score + 1 
 

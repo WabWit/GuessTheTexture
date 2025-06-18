@@ -92,7 +92,7 @@ async def answer(interaction: discord.Interaction, answer: str):
 
     # Check if the answer is right
     if sorted(user_answer.answer_split) == sorted(Current_Server.answer_split):
-        Current_Server.Add_Points(user_id, 1)
+        Current_Server.AddPoints(user_id, 1)
         await roll_send_image(interaction, f"Correct! The answer was: {Current_Server.answer_capped}, How about this one?")
         print(Current_Server.local_scores)
         return
@@ -103,35 +103,13 @@ async def answer(interaction: discord.Interaction, answer: str):
     if right_words == []: #just sees if u r so incredibly wrong and does an early return
         await interaction.followup.send(f"Incorrect. {GuessIndicator}")
         return
-    await interaction.followup.send(f"Incorrect. {GuessIndicator}Correct words: {' '.join(right_words)}")
+    await interaction.followup.send(f"Almost right. {GuessIndicator}Correct words: {' '.join(right_words)}")
 
     if Current_Server.total_guesses < 2: # for hints
         return
-     
-    hint_string = ""
-    possible_hints = Hint.HintChecker(Current_Server.answer)
-    if possible_hints[0]:
-        hint_string = random.choice(possible_hints)
-    else:
-        not_found = list(set(Current_Server.answer_split) - set(Current_Server.words_guessed))
-        if not_found == []:
-            hint_string = "All words have been found"
-        elif len(not_found) == 1:
-            word = not_found[0]
-            string_length = len(word)
-            hint_split = list(word)
-            # Clamp number of characters to replace
-            num_to_replace = int(string_length / 2)
-            indices = random.sample(range(string_length), k=num_to_replace)
-            for i in indices:
-                hint_split[i] = "_"
-
-            hint_joined = ''.join(hint_split)
-            hint_string = discord.utils.escape_markdown(f"The final word is {hint_joined}.")
-        else:
-            hint_string = random.choice(not_found)
-        
-    await interaction.followup.send(f"Looks like yall are having trouble, heres a hint: {hint_string}")
+    
+    hint_string = Hint.HintChecker(Current_Server.answer, Current_Server.words_guessed)  
+    await interaction.followup.send(discord.utils.escape_markdown(f"Looks like yall are having trouble, heres a hint: {hint_string}"))
 
 #check score, broke btw so go fix mofo
 @bot.tree.command(name="score", description="Checks a player's score")
