@@ -41,5 +41,5 @@ def HintChecker(answer, words_found = []):
         censored_words.append("".join(word_split))
     second_clue = " ".join(censored_words)
     if first_clue and second_clue:
-        return f"It is {first_clue}. Missing words: {second_clue}"
+        return f"{first_clue}. Missing words: {second_clue}"
     return f"Missing word is: {first_clue}{second_clue}"

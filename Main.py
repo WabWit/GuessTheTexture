@@ -1,6 +1,12 @@
+#Main code that does most logic and discord handling
+import os
+import json
+import time
+import discord
 from dotenv import load_dotenv
-import os, json, math, asyncio, time, random, Hint, Cleaner, discord, GTTUtils
 from discord.ext import commands
+import GTTUtils
+import Hint
 
 # Load your token from .env file
 load_dotenv()
@@ -11,7 +17,7 @@ Admins = [292608557335969793]
 
 # Check if a save file exists and use it
 SERVER_SAVED_SCORES = {}
-with open(f"GTTServers.json", "r") as file:
+with open(f"GTTServers.json", "r", encoding="utf-8") as file:
     SERVER_SAVED_SCORES = json.load(file)
 for guild_id in SERVER_SAVED_SCORES.keys():
     GTTServers[guild_id] = GTTUtils.GTTMaker(SERVER_SAVED_SCORES[guild_id])
@@ -111,7 +117,7 @@ async def answer(interaction: discord.Interaction, answer: str):
     hint_string = Hint.HintChecker(Current_Server.answer, Current_Server.words_guessed)  
     await interaction.followup.send(discord.utils.escape_markdown(f"Looks like yall are having trouble, heres a hint: {hint_string}"))
 
-#check score, broke btw so go fix mofo
+#check score
 @bot.tree.command(name="score", description="Checks a player's score")
 async def score(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -126,8 +132,7 @@ async def score(interaction: discord.Interaction):
     player_score = Current_Server.local_scores.get(str(user_id), 0)
     await interaction.followup.send(f"Your score is {player_score}")
 
-# Async Functions
-
+# ASYNC FUNCTIONS
 # rerolls and sends image
 async def roll_send_image(interaction: discord.Interaction, message):
     guild_id = interaction.guild_id

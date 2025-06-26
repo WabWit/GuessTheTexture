@@ -1,12 +1,14 @@
 import time, Cleaner, random
 
 IMAGESET_VANILLA = []
-with open("filenames.txt") as image_set_list:
+with open("filenames.txt", encoding="utf-8") as image_set_list:
     IMAGESET_VANILLA = image_set_list.read().split("\n")
 
 # GTT per server class objecter
 class GTTMaker:
-    def __init__(self, local_scores = {}):
+    def __init__(self, local_scores = None):
+        if local_scores is None:
+            local_scores = {}
         print("initialized")
         self.original = ""
         self.answer = ""
@@ -40,11 +42,14 @@ class GTTMaker:
         self.per_user_guesses = {}
         self.words_guessed = []
 
-    def AddPoints(self, player_id, amount = int):
+    def AddPoints(self, player_id, amount = 1): 
+        # Add points. default 1
         player_score = self.local_scores.get(str(player_id), 0)
-        self.local_scores[str(player_id)] = player_score + 1 
+        self.local_scores[str(player_id)] = player_score + amount
 
-    def TimeReset(self, to_reset_list = ["Debounce", "Rolled"]):
+    def TimeReset(self, to_reset_list = None):
+        if to_reset_list is None:
+            to_reset_list = ["Debounce", "Rolled"]
         for to_reset in to_reset_list:
             match to_reset:
                 case "Debounce":
