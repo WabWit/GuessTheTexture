@@ -39,12 +39,12 @@ async def on_ready():
 
 @bot.tree.command(name="quit", description="back to the gulag")
 async def exit(interaction : discord.Interaction):
-    await interaction.response.defer()
-    perms = await Check_Perms(interaction, "Admin")
-    if perms:
+    
+    if not await Check_Perms(interaction, "Admin"):
+        await interaction.response.send_message("Admin only command!", ephemeral=True)
         return
     print(f"Bot shutting down blame {interaction.user.display_name} from {interaction.guild.name}")
-
+    await interaction.response.defer()
     dump = {}
     for guild_id in GTTServers.keys():
         dump[str(guild_id)] = GTTServers[str(guild_id)].local_scores
@@ -55,17 +55,29 @@ async def exit(interaction : discord.Interaction):
 
 @bot.tree.command(name="start", description="Starts a GTT Game - Admin Only")
 async def start(interaction: discord.Interaction):
-    perms = await Check_Perms(interaction, "Admin")
-    if perms:
-        await interaction.followup.send("NUH UH")
+    guild_id = interaction.guild_id
+    if not await Check_Perms(interaction, "Admin"):
+        await interaction.response.send_message("You need to be an admin to start a game", ephemeral=True)
         return
     await interaction.response.defer()
-    await roll_send_image(interaction, "Guess this image:")
+    Current_Server = None
+    if await check_game(interaction):
+        Current_Server = GTTServers.get(str(guild_id))
+    Current_Server.Reset()
+    await send_image(interaction, "Guess this image:")
 
 # ALL COMMANDS FOR NORMAL PLAYERS
 #sending a picture
 @bot.tree.command(name="image", description="Bumps the current image")
 async def image(interaction: discord.Interaction):
+    if await check_game(interaction):
+        await interaction.response.send_message("No Active GTT Game, go tell <@292608557335969793> to start one")
+        return
+    guild_id = interaction.guild_id
+    CurrentServer = GTTServers.get(str(guild_id))
+    if CurrentServer.GetTimeDifference("Debounce") < 50:
+        await interaction.response.send_message("TOO FAST!!", ephemeral=True)
+        return 
     await interaction.response.defer()
     await send_image(interaction, "Here is the image:")
 
@@ -79,7 +91,7 @@ async def answer(interaction: discord.Interaction, answer: str):
     user_answer = GTTUtils.AnswerContainer(answer)
     Current_Server = GTTServers.get(str(guild_id))
     # return if no active game
-    if Current_Server == None:
+    if await check_game(interaction):
         await interaction.followup.send("No Active GTT game")
         return
     Current_Server.total_guesses += 1
@@ -99,8 +111,9 @@ async def answer(interaction: discord.Interaction, answer: str):
     # Check if the answer is right
     if sorted(user_answer.answer_split) == sorted(Current_Server.answer_split):
         Current_Server.AddPoints(user_id, 1)
-        await roll_send_image(interaction, f"Correct! The answer was: {Current_Server.answer_capped}, How about this one?")
-        print(Current_Server.local_scores)
+        await interaction.followup.send(f"Correct! The answer was: {Current_Server.answer_capped}")
+        Current_Server.Reset()
+        await send_image(interaction, "For the next image:")
         return
     right_words = list(set(Current_Server.answer_split) & set(user_answer.answer_split))
     Current_Server.words_guessed = list(set(right_words) | set(Current_Server.words_guessed))
@@ -133,48 +146,44 @@ async def score(interaction: discord.Interaction):
     await interaction.followup.send(f"Your score is {player_score}")
 
 # ASYNC FUNCTIONS
-# rerolls and sends image
-async def roll_send_image(interaction: discord.Interaction, message):
-    guild_id = interaction.guild_id
-    user_id = interaction.user.id
-
-    if GTTServers.get(str(guild_id)) == None: # Makes the GTT game for that server if it dosnest exist
-        GTTServers[str(guild_id)] = GTTUtils.GTTMaker()
-    CurrentServer = GTTServers.get(str(guild_id)) # Access the GTT game for that server
-    CurrentServer.Reset()
-    print(CurrentServer)
-    print(interaction.guild.name)
-    GTT_Image = discord.File(filename="Dont_Cheese_XD.png", spoiler= False, fp=f"IMAGESET_VANILLA/{CurrentServer.original}")
-
-    await interaction.followup.send(message,file=GTT_Image)
-
-# bumps the image
+# just sends the image
 async def send_image(interaction: discord.Interaction, message):
     guild_id = interaction.guild_id
+    CurrentServer = GTTServers.get(str(guild_id))
+    print(CurrentServer)
+    GTT_Image = discord.File(filename="Dont_Cheese_XD.png", spoiler= False, fp=f"IMAGESET_VANILLA/{CurrentServer.original}")
+    await interaction.followup.send(message,file=GTT_Image)
+
+# Checks if theres an active gtt game, if not then returns true
+async def check_game(interaction: discord.Interaction):
+    guild_id = interaction.guild_id
 
     if GTTServers.get(str(guild_id)) == None: # Makes the GTT game for that server if it dosnest exist
         GTTServers[str(guild_id)] = GTTUtils.GTTMaker()
-        await interaction.followup.send("No Active GTT Game")
-        return
-    CurrentServer = GTTServers.get(str(guild_id)) # Access the GTT game for that server
-    if CurrentServer.original == None: # To see if there is a game that has started
-        await interaction.followup.send("No Active GTT Game")
-        return
-    if int(time.time()) <= int(CurrentServer.time_list["Debounce"] + 10):
-        await interaction.followup.send("Too Fast!", ephemeral=True)
-        return
-    CurrentServer.TimeReset(["Debounce"])
-    print(CurrentServer)
-    print(interaction.guild.name)
-    GTT_Image = discord.File(filename="Dont_Cheese_XD.png", spoiler= False, fp=f"IMAGESET_VANILLA/{CurrentServer.original}")
+        return True
 
-    await interaction.followup.send(message,file=GTT_Image)
+    CurrentServer = GTTServers.get(str(guild_id)) # Access the GTT game for that server
+    if not CurrentServer.original: # To see if there is a game that has started
+        return True
+    
+    return False
 
 # check permisions, return false if nuh uh
 async def Check_Perms(interaction, type = "Admin"):
     if type == "Admin":
         if interaction.user.id not in Admins:
-            await interaction.followup.send("You aint no admin!")
             return False
+        return True
 # Start the bot
+
+#TESTING
+@client.tree.command()
+@app_commands.describe(
+    first_value='The first value you want to add something to',
+    second_value='The value you want to add to the first value',
+)
+async def add(interaction: discord.Interaction, first_value: int, second_value: int):
+    """Adds two numbers together."""
+    await interaction.response.send_message(f'{first_value} + {second_value} = {first_value + second_value}')
+
 bot.run(TOKEN)

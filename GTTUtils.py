@@ -61,6 +61,12 @@ class GTTMaker:
                 case _:
                     print(f"{to_reset} Does not exist in time_list, fix ur code dumbas")
 
+    def GetTimeDifference(self, type = "Debounce"):
+        self_time = self.time_list.get(type)
+        if self_time:
+            return (int(time.time()) - self_time)
+        else:
+            raise Exception("Type Error")
 
 
 class AnswerContainer:
