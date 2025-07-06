@@ -5,19 +5,24 @@ import time
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
-import GTTUtils
-import Hint
+from discord import app_commands
+from pathlib import Path
+from modules import GTTUtils
+from modules import Hint
 
 # Load your token from .env file
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
 
+BASE_DIR = Path(__file__).parent
+GTTSERVERS_PATH = BASE_DIR / "Data" / "GTTServers.json"
+IMAGESET_VANILLA_PATH = BASE_DIR / "Data" / "IMAGESET_VANILLA"
 GTTServers = {} #creates a container for servers
 Admins = [292608557335969793]
 
 # Check if a save file exists and use it
 SERVER_SAVED_SCORES = {}
-with open(f"GTTServers.json", "r", encoding="utf-8") as file:
+with open(GTTSERVERS_PATH, "r", encoding="utf-8") as file:
     SERVER_SAVED_SCORES = json.load(file)
 for guild_id in SERVER_SAVED_SCORES.keys():
     GTTServers[guild_id] = GTTUtils.GTTMaker(SERVER_SAVED_SCORES[guild_id])
@@ -38,6 +43,7 @@ async def on_ready():
     print("Slash commands synced!")
 
 @bot.tree.command(name="quit", description="back to the gulag")
+@commands.is_owner()
 async def exit(interaction : discord.Interaction):
     
     if not await Check_Perms(interaction, "Admin"):
@@ -63,7 +69,10 @@ async def start(interaction: discord.Interaction):
     Current_Server = None
     if await check_game(interaction):
         Current_Server = GTTServers.get(str(guild_id))
-    Current_Server.Reset()
+        Current_Server.Reset()
+    else:
+        await interaction.followup.send("A game has already started")
+        return
     await send_image(interaction, "Guess this image:")
 
 # ALL COMMANDS FOR NORMAL PLAYERS
@@ -75,11 +84,13 @@ async def image(interaction: discord.Interaction):
         return
     guild_id = interaction.guild_id
     CurrentServer = GTTServers.get(str(guild_id))
-    if CurrentServer.GetTimeDifference("Debounce") < 50:
-        await interaction.response.send_message("TOO FAST!!", ephemeral=True)
-        return 
     await interaction.response.defer()
     await send_image(interaction, "Here is the image:")
+
+@image.error
+async def image_error(interaction, error):
+    if isinstance(error, commands.CommandOnCooldown):
+        await interaction.response.send("TOO FAST!")
 
 #answer command
 @bot.tree.command(name="answer", description="are you sure?")
@@ -151,7 +162,7 @@ async def send_image(interaction: discord.Interaction, message):
     guild_id = interaction.guild_id
     CurrentServer = GTTServers.get(str(guild_id))
     print(CurrentServer)
-    GTT_Image = discord.File(filename="Dont_Cheese_XD.png", spoiler= False, fp=f"IMAGESET_VANILLA/{CurrentServer.original}")
+    GTT_Image = discord.File(filename="Dont_Cheese_XD.png", spoiler= False, fp=f"{IMAGESET_VANILLA_PATH}/{CurrentServer.original}")
     await interaction.followup.send(message,file=GTT_Image)
 
 # Checks if theres an active gtt game, if not then returns true
@@ -175,15 +186,5 @@ async def Check_Perms(interaction, type = "Admin"):
             return False
         return True
 # Start the bot
-
-#TESTING
-@client.tree.command()
-@app_commands.describe(
-    first_value='The first value you want to add something to',
-    second_value='The value you want to add to the first value',
-)
-async def add(interaction: discord.Interaction, first_value: int, second_value: int):
-    """Adds two numbers together."""
-    await interaction.response.send_message(f'{first_value} + {second_value} = {first_value + second_value}')
 
 bot.run(TOKEN)

@@ -1,7 +1,14 @@
-import time, Cleaner, random
+import time
+import random
+from modules import Cleaner
+from pathlib import Path
+
+BASE_DIR = Path(__file__).parent.parent
+FILENAMES_PATH = BASE_DIR / "Data" / "filenames.txt"
+IMAGESET_VANILLA_PATH = BASE_DIR / "Data" /"IMAGESET_VANILLA"
 
 IMAGESET_VANILLA = []
-with open("filenames.txt", encoding="utf-8") as image_set_list:
+with open(FILENAMES_PATH, encoding="utf-8") as image_set_list:
     IMAGESET_VANILLA = image_set_list.read().split("\n")
 
 # GTT per server class objecter
@@ -29,6 +36,15 @@ class GTTMaker:
 
     def Roll(self):
         answer = random.choice(IMAGESET_VANILLA)
+        file_path = IMAGESET_VANILLA_PATH / answer
+
+        while not file_path.is_file():
+            print(f"WARNING, {answer} DOES NOT EXIST! Rerolling now")
+            answer = random.choice(IMAGESET_VANILLA)
+            file_path = IMAGESET_VANILLA_PATH / answer
+            time.sleep(1)
+            
+
         cleaned_answer = Cleaner.clean_string(answer)
         self.original = answer
         self.answer = cleaned_answer
@@ -41,11 +57,6 @@ class GTTMaker:
         self.total_guesses = 0
         self.per_user_guesses = {}
         self.words_guessed = []
-
-    def AddPoints(self, player_id, amount = 1): 
-        # Add points. default 1
-        player_score = self.local_scores.get(str(player_id), 0)
-        self.local_scores[str(player_id)] = player_score + amount
 
     def TimeReset(self, to_reset_list = None):
         if to_reset_list is None:
@@ -61,12 +72,13 @@ class GTTMaker:
                 case _:
                     print(f"{to_reset} Does not exist in time_list, fix ur code dumbas")
 
-    def GetTimeDifference(self, type = "Debounce"):
-        self_time = self.time_list.get(type)
-        if self_time:
-            return (int(time.time()) - self_time)
-        else:
-            raise Exception("Type Error")
+    def AddPoints(self, player_id, amount = 1): 
+        # Add points. default 1
+        player_score = self.local_scores.get(str(player_id), 0)
+        self.local_scores[str(player_id)] = player_score + amount
+
+    def TimeReset(self):
+        self.time = int(time.time())
 
 
 class AnswerContainer:

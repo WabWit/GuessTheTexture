@@ -1,8 +1,14 @@
-import Cleaner, json, random
+import json
+import random
+from modules import Cleaner
+from pathlib import Path
+
+BASE_DIR = Path(__file__).parent.parent
+HINTLIST_PATH = BASE_DIR / "Data" / "hintlist.json"
 
 #HintList Initializer
 HINTLIST = {}
-with open(f"hintlist.json", "r") as file:
+with open(HINTLIST_PATH, "r") as file:
     HINTLIST = json.load(file)
 
 #Cleans the hintlist entries to be the same as answers

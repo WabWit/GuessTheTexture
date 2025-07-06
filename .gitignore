@@ -1,6 +1,5 @@
-/IMAGESET_VANILLA/
-*.env
-/__pycache__/
-/renamer.py
-/filetotxt.py
-/GTTServers.json
+/Data/IMAGESET_VANILLA
+/Data/GTTServers.json
+/modules/__pycache__
+/.env
+/test.py
