@@ -40,5 +40,18 @@
         "minecraft__waxed_weathered_cut_copper_slab.png",
         "minecraft__waxed_weathered_cut_copper_stairs.png"
         ]
+    ],
+    "Infested" :
+    [
+        "There lies silverfish inside this block",
+        [
+            "minecraft__infested_chiseled_stone_bricks.png",
+            "minecraft__infested_cobblestone.png",
+            "minecraft__infested_cracked_stone_bricks.png",
+            "minecraft__infested_deepslate.png",
+            "minecraft__infested_mossy_stone_bricks.png",
+            "minecraft__infested_stone.png",
+            "minecraft__infested_stone_bricks.png"
+        ]
     ]
 }

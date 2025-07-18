@@ -9,6 +9,7 @@ from discord import app_commands
 from pathlib import Path
 from modules import GTTUtils
 from modules import Hint
+from modules.Common_FNCS import *
 
 # Load your token from .env file
 load_dotenv()
@@ -17,15 +18,6 @@ TOKEN = os.getenv('TOKEN')
 BASE_DIR = Path(__file__).parent
 GTTSERVERS_PATH = BASE_DIR / "Data" / "GTTServers.json"
 IMAGESET_VANILLA_PATH = BASE_DIR / "Data" / "IMAGESET_VANILLA"
-GTTServers = {} #creates a container for servers
-Admins = [292608557335969793]
-
-# Check if a save file exists and use it
-SERVER_SAVED_SCORES = {}
-with open(GTTSERVERS_PATH, "r", encoding="utf-8") as file:
-    SERVER_SAVED_SCORES = json.load(file)
-for guild_id in SERVER_SAVED_SCORES.keys():
-    GTTServers[guild_id] = GTTUtils.GTTMaker(SERVER_SAVED_SCORES[guild_id])
 
 # Setup Discord bot with all intents
 intents = discord.Intents.all()
@@ -43,7 +35,6 @@ async def on_ready():
     print("Slash commands synced!")
 
 @bot.tree.command(name="quit", description="back to the gulag")
-@commands.is_owner()
 async def exit(interaction : discord.Interaction):
     
     if not await Check_Perms(interaction, "Admin"):
@@ -54,7 +45,7 @@ async def exit(interaction : discord.Interaction):
     dump = {}
     for guild_id in GTTServers.keys():
         dump[str(guild_id)] = GTTServers[str(guild_id)].local_scores
-    with open("GTTServers.json", "w") as ServersFile:
+    with open(GTTSERVERS_PATH, "w") as ServersFile:
         json.dump(dump, ServersFile)
     await interaction.followup.send("Shutting Down")
     await quit()
@@ -155,36 +146,5 @@ async def score(interaction: discord.Interaction):
     
     player_score = Current_Server.local_scores.get(str(user_id), 0)
     await interaction.followup.send(f"Your score is {player_score}")
-
-# ASYNC FUNCTIONS
-# just sends the image
-async def send_image(interaction: discord.Interaction, message):
-    guild_id = interaction.guild_id
-    CurrentServer = GTTServers.get(str(guild_id))
-    print(CurrentServer)
-    GTT_Image = discord.File(filename="Dont_Cheese_XD.png", spoiler= False, fp=f"{IMAGESET_VANILLA_PATH}/{CurrentServer.original}")
-    await interaction.followup.send(message,file=GTT_Image)
-
-# Checks if theres an active gtt game, if not then returns true
-async def check_game(interaction: discord.Interaction):
-    guild_id = interaction.guild_id
-
-    if GTTServers.get(str(guild_id)) == None: # Makes the GTT game for that server if it dosnest exist
-        GTTServers[str(guild_id)] = GTTUtils.GTTMaker()
-        return True
-
-    CurrentServer = GTTServers.get(str(guild_id)) # Access the GTT game for that server
-    if not CurrentServer.original: # To see if there is a game that has started
-        return True
-    
-    return False
-
-# check permisions, return false if nuh uh
-async def Check_Perms(interaction, type = "Admin"):
-    if type == "Admin":
-        if interaction.user.id not in Admins:
-            return False
-        return True
-# Start the bot
 
 bot.run(TOKEN)
