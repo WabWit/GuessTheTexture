@@ -16,8 +16,9 @@ with open(GTTSERVERS_PATH, "r", encoding="utf-8") as file:
     SERVER_SAVED_SCORES = json.load(file)
 for guild_id in SERVER_SAVED_SCORES.keys():
     GTTServers[guild_id] = GTTUtils.GTTMaker(SERVER_SAVED_SCORES[guild_id])
+
 # just sends the image
-async def send_image(interaction: discord.Interaction, message):
+async def send_image(interaction: discord.Interaction, message) -> None:
     guild_id = interaction.guild_id
     CurrentServer = GTTServers.get(str(guild_id))
     print(CurrentServer)
@@ -25,7 +26,7 @@ async def send_image(interaction: discord.Interaction, message):
     await interaction.followup.send(message,file=GTT_Image)
 
 # Checks if theres an active gtt game, if not then returns true
-async def check_game(interaction: discord.Interaction):
+async def check_game(interaction: discord.Interaction) -> None:
     guild_id = interaction.guild_id
 
     if GTTServers.get(str(guild_id)) == None: # Makes the GTT game for that server if it dosnest exist
@@ -39,7 +40,7 @@ async def check_game(interaction: discord.Interaction):
     return False
 
 # check permisions, return false if nuh uh
-async def Check_Perms(interaction, type = "Admin"):
+async def Check_Perms(interaction, type = "Admin") -> bool:
     if type == "Admin":
         if interaction.user.id not in Admins:
             return False

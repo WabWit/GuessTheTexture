@@ -23,8 +23,16 @@ IMAGESET_VANILLA_PATH = BASE_DIR / "Data" / "IMAGESET_VANILLA"
 intents = discord.Intents.all()
 intents.message_content = True
 
-# Create the bot with a prefix (for compatibility with text commands)
-bot = commands.Bot(command_prefix=",", intents=intents)
+class GTTBOT(commands.Bot):
+    def __init__(self):
+        super().__init__(
+            command_prefix=",",
+            intents=intents
+        )
+
+    async def setup_hook(self):
+        await self.load_extension("cogs")
+bot = GTTBOT()
 
 # Slash command registration (sync)
 @bot.event
@@ -123,9 +131,9 @@ async def answer(interaction: discord.Interaction, answer: str):
     print(Current_Server.answer_split, user_answer.answer_split, Current_Server.words_guessed)
     if right_words == []: #just sees if u r so incredibly wrong and does an early return
         await interaction.followup.send(f"Incorrect. {GuessIndicator}")
-        return
-    await interaction.followup.send(f"Almost right. {GuessIndicator}Correct words: {' '.join(right_words)}")
-
+    else:
+        await interaction.followup.send(f"Almost right. {GuessIndicator}Correct words: {' '.join(right_words)}")
+    print(Current_Server.total_guesses)
     if Current_Server.total_guesses < 2: # for hints
         return
     
@@ -146,5 +154,7 @@ async def score(interaction: discord.Interaction):
     
     player_score = Current_Server.local_scores.get(str(user_id), 0)
     await interaction.followup.send(f"Your score is {player_score}")
+
+#bot.run(TOKEN)
 
 bot.run(TOKEN)
