@@ -42,38 +42,6 @@ async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     print("Slash commands synced!")
 
-@bot.tree.command(name="quit", description="back to the gulag")
-async def exit(interaction : discord.Interaction):
-    
-    if not await Check_Perms(interaction, "Admin"):
-        await interaction.response.send_message("Admin only command!", ephemeral=True)
-        return
-    print(f"Bot shutting down blame {interaction.user.display_name} from {interaction.guild.name}")
-    await interaction.response.defer()
-    dump = {}
-    for guild_id in GTTServers.keys():
-        dump[str(guild_id)] = GTTServers[str(guild_id)].local_scores
-    with open(GTTSERVERS_PATH, "w") as ServersFile:
-        json.dump(dump, ServersFile)
-    await interaction.followup.send("Shutting Down")
-    await quit()
-
-@bot.tree.command(name="start", description="Starts a GTT Game - Admin Only")
-async def start(interaction: discord.Interaction):
-    guild_id = interaction.guild_id
-    if not await Check_Perms(interaction, "Admin"):
-        await interaction.response.send_message("You need to be an admin to start a game", ephemeral=True)
-        return
-    await interaction.response.defer()
-    Current_Server = None
-    if await check_game(interaction):
-        Current_Server = GTTServers.get(str(guild_id))
-        Current_Server.Reset()
-    else:
-        await interaction.followup.send("A game has already started")
-        return
-    await send_image(interaction, "Guess this image:")
-
 # ALL COMMANDS FOR NORMAL PLAYERS
 #sending a picture
 @bot.tree.command(name="image", description="Bumps the current image")
@@ -154,7 +122,5 @@ async def score(interaction: discord.Interaction):
     
     player_score = Current_Server.local_scores.get(str(user_id), 0)
     await interaction.followup.send(f"Your score is {player_score}")
-
-#bot.run(TOKEN)
 
 bot.run(TOKEN)
