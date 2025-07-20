@@ -8,7 +8,7 @@ class AdminCog(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="quit", description="back to the gulag")
-    async def exit(interaction : discord.Interaction):
+    async def exit(self, interaction : discord.Interaction):
         
         if not await Check_Perms(interaction, "Admin"):
             await interaction.response.send_message("Admin only command!", ephemeral=True)
@@ -24,7 +24,7 @@ class AdminCog(commands.Cog):
         await quit()
 
     @app_commands.command(name="start", description="Starts a GTT Game - Admin Only")
-    async def start(interaction: discord.Interaction):
+    async def start(self, interaction: discord.Interaction):
         guild_id = interaction.guild_id
         if not await Check_Perms(interaction, "Admin"):
             await interaction.response.send_message("You need to be an admin to start a game", ephemeral=True)

@@ -31,7 +31,7 @@ class GTTBOT(commands.Bot):
         )
 
     async def setup_hook(self):
-        await self.load_extension("cogs")
+        await self.load_extension("cogs.admin")
 bot = GTTBOT()
 
 # Slash command registration (sync)
