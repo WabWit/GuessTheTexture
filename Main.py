@@ -73,6 +73,7 @@ async def answer(interaction: discord.Interaction, answer: str):
         return
     Current_Server: GTTMaker = GTTServers.get(str(guild_id))
     Current_Server.total_guesses += 1
+    
     # Number of guess detection
     GuessIndicator = ""
     amount_of_guessses = Current_Server.per_user_guesses.get(str(user_id), 0)
@@ -94,7 +95,8 @@ async def answer(interaction: discord.Interaction, answer: str):
         return
     right_words = list(set(Current_Server.answer_split) & set(user_answer.answer_split))
     Current_Server.words_guessed = list(set(right_words) | set(Current_Server.words_guessed))
-    
+
+    # Hint sender
     print(Current_Server.answer_split, user_answer.answer_split, Current_Server.words_guessed)
     if right_words == []: #just sees if u r so incredibly wrong and does an early return
         await interaction.followup.send(f"Incorrect. {GuessIndicator}")
