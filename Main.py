@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 from discord.ext import commands
 from discord import app_commands
 from pathlib import Path
-from modules import GTTUtils
 from modules import Hint
+from modules.GTTUtils import *
 from modules.Common_FNCS import *
 
 # Load your token from .env file
@@ -46,7 +46,7 @@ async def on_ready():
 #sending a picture
 @bot.tree.command(name="image", description="Bumps the current image")
 async def image(interaction: discord.Interaction):
-    if await check_game(interaction):
+    if not await is_game_active(interaction):
         await interaction.response.send_message("No Active GTT Game, go tell <@292608557335969793> to start one")
         return
     guild_id = interaction.guild_id
@@ -66,12 +66,12 @@ async def answer(interaction: discord.Interaction, answer: str):
     await interaction.response.defer()
     guild_id = interaction.guild_id 
     user_id = interaction.user.id
-    user_answer = GTTUtils.AnswerContainer(answer)
-    Current_Server = GTTServers.get(str(guild_id))
+    user_answer = AnswerContainer(answer)
     # return if no active game
-    if await check_game(interaction):
+    if not await is_game_active(interaction):
         await interaction.followup.send("No Active GTT game")
         return
+    Current_Server: GTTMaker = GTTServers.get(str(guild_id))
     Current_Server.total_guesses += 1
     # Number of guess detection
     GuessIndicator = ""
@@ -79,7 +79,6 @@ async def answer(interaction: discord.Interaction, answer: str):
     if amount_of_guessses == 3:
         await interaction.followup.send("You're out of guesses buckaroo.")
         return
-    
     if amount_of_guessses == 2:
         GuessIndicator = "You're out of guesses. "
     if amount_of_guessses == 1:
@@ -114,12 +113,11 @@ async def score(interaction: discord.Interaction):
     await interaction.response.defer()
     guild_id = interaction.guild_id 
     user_id = interaction.user.id
-    Current_Server = GTTServers.get(str(guild_id))
     # return if no active game
-    if Current_Server == None:
+    if not await is_game_active(interaction):
         await interaction.followup.send("No Active GTT Game")
         return
-    
+    Current_Server: GTTMaker = GTTServers.get(str(guild_id))    
     player_score = Current_Server.local_scores.get(str(user_id), 0)
     await interaction.followup.send(f"Your score is {player_score}")
 

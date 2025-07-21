@@ -39,6 +39,11 @@ class AdminCog(commands.Cog):
             return
         await send_image(interaction, "Guess this image:")
 
+    @app_commands.command(name="pingcd")
+    @commands.cooldown(1,10, commands.BucketType.user)
+    async def pingcd(self, interaction: discord.Interaction):
+        await interaction.response.send_message("PONGOLISIHOU")
+
 async def setup(bot: commands.Bot) -> None:
     # finally, adding the cog to the bot
     await bot.add_cog(AdminCog(bot=bot))

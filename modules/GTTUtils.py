@@ -1,5 +1,7 @@
 import time
 import random
+import discord
+from discord.ext import commands
 from modules import Cleaner
 from pathlib import Path
 
@@ -90,3 +92,12 @@ class AnswerContainer:
     
     def __str__(self):
         return f"Answer: {self.answer} \nAnswer Array: {self.answer_split} \nAnswer Readable: {self.answer_capped}"
+    
+class CooldownManager:
+    def __init__(self):
+        self._cd = commands.CooldownMapping.from_cooldown(1, 10, commands.BucketType.guild)
+
+    def check(self, interaction: discord.Interaction):
+        bucket = self._cd.get_bucket(interaction)
+        retry_after = bucket.update_rate_limit()
+        return retry_after

@@ -2,7 +2,7 @@
 import discord
 import json
 from pathlib import Path
-from modules import GTTUtils
+from modules.GTTUtils import *
 
 BASE_DIR = Path(__file__).parent.parent
 GTTSERVERS_PATH = BASE_DIR / "Data" / "GTTServers.json"
@@ -15,7 +15,7 @@ SERVER_SAVED_SCORES = {}
 with open(GTTSERVERS_PATH, "r", encoding="utf-8") as file:
     SERVER_SAVED_SCORES = json.load(file)
 for guild_id in SERVER_SAVED_SCORES.keys():
-    GTTServers[guild_id] = GTTUtils.GTTMaker(SERVER_SAVED_SCORES[guild_id])
+    GTTServers[guild_id] = GTTMaker(SERVER_SAVED_SCORES[guild_id])
 
 # just sends the image
 async def send_image(interaction: discord.Interaction, message) -> None:
@@ -26,18 +26,18 @@ async def send_image(interaction: discord.Interaction, message) -> None:
     await interaction.followup.send(message,file=GTT_Image)
 
 # Checks if theres an active gtt game, if not then returns true
-async def check_game(interaction: discord.Interaction) -> None:
+async def is_game_active(interaction: discord.Interaction) -> None:
     guild_id = interaction.guild_id
 
     if GTTServers.get(str(guild_id)) == None: # Makes the GTT game for that server if it dosnest exist
-        GTTServers[str(guild_id)] = GTTUtils.GTTMaker()
-        return True
+        GTTServers[str(guild_id)] = GTTMaker()
+        return False
 
     CurrentServer = GTTServers.get(str(guild_id)) # Access the GTT game for that server
     if not CurrentServer.original: # To see if there is a game that has started
-        return True
+        return False
     
-    return False
+    return True
 
 # check permisions, return false if nuh uh
 async def Check_Perms(interaction, type = "Admin") -> bool:
