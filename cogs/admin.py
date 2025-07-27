@@ -31,7 +31,7 @@ class AdminCog(commands.Cog):
             return
         await interaction.response.defer()
         Current_Server = None
-        if await check_game(interaction):
+        if not await is_game_active(interaction):
             Current_Server = GTTServers.get(str(guild_id))
             Current_Server.Reset()
         else:
@@ -39,11 +39,21 @@ class AdminCog(commands.Cog):
             return
         await send_image(interaction, "Guess this image:")
 
-    @app_commands.command(name="pingcd")
-    @commands.cooldown(1,10, commands.BucketType.user)
-    async def pingcd(self, interaction: discord.Interaction):
-        await interaction.response.send_message("PONGOLISIHOU")
+
 
 async def setup(bot: commands.Bot) -> None:
     # finally, adding the cog to the bot
     await bot.add_cog(AdminCog(bot=bot))
+
+
+'''
+    @app_commands.command(name="pingcd")
+    @app_commands.checks.cooldown(1,5)
+    async def pingcd(self, interaction: discord.Interaction):
+        await interaction.response.send_message("PONGOLISIHOU")
+
+    @pingcd.error
+    async def on_test_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        if isinstance( error, app_commands.CommandOnCooldown):
+            await interaction.response.send_message(str(error), ephemeral=True)
+'''
