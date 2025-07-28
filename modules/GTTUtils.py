@@ -101,3 +101,18 @@ class CooldownManager:
         bucket = self._cd.get_bucket(interaction)
         retry_after = bucket.update_rate_limit()
         return retry_after
+
+class ServerContainer:
+    def __init__(self, servers: dict = None):
+        if servers == None:
+            self.server_list = {}
+            return
+        self.server_list = servers
+
+    def Get_Server(self, guild_id: str):
+        current_server = self.server_list.get(guild_id)
+        if current_server == None:
+            current_server = self.server_list[guild_id] = GTTMaker()
+
+
+        

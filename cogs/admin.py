@@ -25,14 +25,14 @@ class AdminCog(commands.Cog):
 
     @app_commands.command(name="start", description="Starts a GTT Game - Admin Only")
     async def start(self, interaction: discord.Interaction):
-        guild_id = interaction.guild_id
+        guild_id = str(interaction.guild_id)
         if not await Check_Perms(interaction, "Admin"):
             await interaction.response.send_message("You need to be an admin to start a game", ephemeral=True)
             return
         await interaction.response.defer()
         Current_Server = None
         if not await is_game_active(interaction):
-            Current_Server = GTTServers.get(str(guild_id))
+            Current_Server = GTTServers.get(guild_id)
             Current_Server.Reset()
         else:
             await interaction.followup.send("A game has already started")

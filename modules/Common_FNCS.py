@@ -20,7 +20,7 @@ for guild_id in SERVER_SAVED_SCORES.keys():
 # just sends the image
 async def send_image(interaction: discord.Interaction, message) -> None:
     guild_id = interaction.guild_id
-    CurrentServer = GTTServers.get(str(guild_id))
+    CurrentServer = GTTServers.get(guild_id)
     print(CurrentServer)
     GTT_Image = discord.File(filename="Dont_Cheese_XD.png", spoiler= False, fp=f"{IMAGESET_VANILLA_PATH}/{CurrentServer.original}")
     await interaction.followup.send(message,file=GTT_Image)
@@ -29,11 +29,11 @@ async def send_image(interaction: discord.Interaction, message) -> None:
 async def is_game_active(interaction: discord.Interaction) -> None:
     guild_id = interaction.guild_id
 
-    if GTTServers.get(str(guild_id)) == None: # Makes the GTT game for that server if it dosnest exist
-        GTTServers[str(guild_id)] = GTTMaker()
+    if GTTServers.get(guild_id) == None: # Makes the GTT game for that server if it dosnest exist
+        GTTServers[guild_id] = GTTMaker()
         return False
 
-    CurrentServer = GTTServers.get(str(guild_id)) # Access the GTT game for that server
+    CurrentServer = GTTServers.get(guild_id) # Access the GTT game for that server
     if not CurrentServer.original: # To see if there is a game that has started
         return False
     

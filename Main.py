@@ -49,8 +49,8 @@ async def image(interaction: discord.Interaction):
     if not await is_game_active(interaction):
         await interaction.response.send_message("No Active GTT Game, go tell <@292608557335969793> to start one")
         return
-    guild_id = interaction.guild_id
-    CurrentServer = GTTServers.get(str(guild_id))
+    guild_id = str(interaction.guild_id)
+    CurrentServer = GTTServers.get(guild_id)
     await interaction.response.defer()
     await send_image(interaction, "Here is the image:")
 
@@ -64,19 +64,19 @@ async def image_error(interaction, error):
 async def answer(interaction: discord.Interaction, answer: str):
     # tells discord that i gotchu and wait fo me
     await interaction.response.defer()
-    guild_id = interaction.guild_id 
-    user_id = interaction.user.id
+    guild_id = str(interaction.guild_id)
+    user_id = str(interaction.user.id)
     user_answer = AnswerContainer(answer)
     # return if no active game
     if not await is_game_active(interaction):
         await interaction.followup.send("No Active GTT game")
         return
-    Current_Server: GTTMaker = GTTServers.get(str(guild_id))
+    Current_Server: GTTMaker = GTTServers.get(guild_id)
     Current_Server.total_guesses += 1
     
     # Number of guess detection
     GuessIndicator = ""
-    amount_of_guessses = Current_Server.per_user_guesses.get(str(user_id), 0)
+    amount_of_guessses = Current_Server.per_user_guesses.get(user_id, 0)
     if amount_of_guessses == 3:
         await interaction.followup.send("You're out of guesses buckaroo.")
         return
@@ -84,7 +84,7 @@ async def answer(interaction: discord.Interaction, answer: str):
         GuessIndicator = "You're out of guesses. "
     if amount_of_guessses == 1:
         GuessIndicator = "You have one guess left. "
-    Current_Server.per_user_guesses[str(user_id)] = amount_of_guessses + 1
+    Current_Server.per_user_guesses[user_id] = amount_of_guessses + 1
 
     # Check if the answer is right
     if sorted(user_answer.answer_split) == sorted(Current_Server.answer_split):
@@ -113,14 +113,14 @@ async def answer(interaction: discord.Interaction, answer: str):
 @bot.tree.command(name="score", description="Checks a player's score")
 async def score(interaction: discord.Interaction):
     await interaction.response.defer()
-    guild_id = interaction.guild_id 
-    user_id = interaction.user.id
+    guild_id = str(interaction.guild_id) 
+    user_id = str(interaction.user.id)
     # return if no active game
     if not await is_game_active(interaction):
         await interaction.followup.send("No Active GTT Game")
         return
-    Current_Server: GTTMaker = GTTServers.get(str(guild_id))    
-    player_score = Current_Server.local_scores.get(str(user_id), 0)
+    Current_Server: GTTMaker = GTTServers.get(guild_id)    
+    player_score = Current_Server.local_scores.get(user_id, 0)
     await interaction.followup.send(f"Your score is {player_score}")
 
 bot.run(TOKEN)
