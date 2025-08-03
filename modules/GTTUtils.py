@@ -15,7 +15,7 @@ with open(FILENAMES_PATH, encoding="utf-8") as image_set_list:
 
 # GTT per server class objecter
 class GTTMaker:
-    def __init__(self, local_scores = None):
+    def __init__(self, local_scores: dict = None):
         if local_scores is None:
             local_scores = {}
         print("initialized")
@@ -109,10 +109,15 @@ class ServerContainer:
             return
         self.server_list = servers
 
-    def Get_Server(self, guild_id: str):
+    def Add_Server(self, guild_id: str, local_scores: dict = None) -> None:
+        if local_scores == None:
+            local_scores = {}
+        self.server_list[guild_id] = GTTMaker(local_scores)
+
+    def Get_Server(self, guild_id: str) -> GTTMaker:
         current_server = self.server_list.get(guild_id)
         if current_server == None:
-            current_server = self.server_list[guild_id] = GTTMaker()
-
+            current_server = self.Add_Server(guild_id)
+        return current_server
 
         
