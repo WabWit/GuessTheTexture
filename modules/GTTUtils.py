@@ -107,7 +107,8 @@ class ServerContainer:
         if servers == None:
             self.server_list = {}
             return
-        self.server_list = servers
+        for guild_id in servers:
+            self.server_list[guild_id] = GTTMaker(servers.get(guild_id))
 
     def Add_Server(self, guild_id: str, local_scores: dict = None) -> None:
         if local_scores == None:
