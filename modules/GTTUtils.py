@@ -79,9 +79,6 @@ class GTTMaker:
         player_score = self.local_scores.get(str(player_id), 0)
         self.local_scores[str(player_id)] = player_score + amount
 
-    def TimeReset(self):
-        self.time = int(time.time())
-
 
 class AnswerContainer:
     def __init__(self, answer: str):
@@ -104,21 +101,34 @@ class CooldownManager:
 
 class ServerContainer:
     def __init__(self, servers: dict = None):
+        self.server_list = {}
         if servers == None:
-            self.server_list = {}
             return
-        for guild_id in servers:
-            self.server_list[guild_id] = GTTMaker(servers.get(guild_id))
+        self.Add_Multiple_Servers(servers)
 
     def Add_Server(self, guild_id: str, local_scores: dict = None) -> None:
+        print("im so deep")
+        print(local_scores)
         if local_scores == None:
             local_scores = {}
         self.server_list[guild_id] = GTTMaker(local_scores)
 
+    def Add_Multiple_Servers(self, server_list: dict = None) -> None:
+        if server_list == None:
+            print("SERVER LIST IS EMPTY, RETURNING WITH NO NEW SERVERS")
+            return
+
+        print("wawawaw")
+        for guild_id in server_list.keys():
+            print("im in")
+            self.Add_Server(guild_id, server_list[guild_id])
+        print(self.server_list)
+
     def Get_Server(self, guild_id: str) -> GTTMaker:
         current_server = self.server_list.get(guild_id)
         if current_server == None:
-            current_server = self.Add_Server(guild_id)
+            self.Add_Server(guild_id)
+            current_server = self.server_list.get(guild_id)
         return current_server
 
         

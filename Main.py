@@ -10,6 +10,7 @@ from pathlib import Path
 from modules import Hint
 from modules.GTTUtils import *
 from modules.Common_FNCS import *
+from modules.data_manager import *
 
 # Load your token from .env file
 load_dotenv()
@@ -41,6 +42,7 @@ async def on_ready():
     await bot.tree.sync()         # Registers the slash commands with Discord
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     print("Slash commands synced!")
+    get_saved_data()
 
 # ALL COMMANDS FOR NORMAL PLAYERS
 #sending a picture
@@ -49,8 +51,6 @@ async def image(interaction: discord.Interaction):
     if not await is_game_active(interaction):
         await interaction.response.send_message("No Active GTT Game, go tell <@292608557335969793> to start one")
         return
-    guild_id = str(interaction.guild_id)
-    CurrentServer = GTTServers.get(guild_id)
     await interaction.response.defer()
     await send_image(interaction, "Here is the image:")
 
@@ -71,7 +71,7 @@ async def answer(interaction: discord.Interaction, answer: str):
     if not await is_game_active(interaction):
         await interaction.followup.send("No Active GTT game")
         return
-    Current_Server: GTTMaker = GTTServers.get(guild_id)
+    Current_Server: GTTMaker = GTTServers.Get_Server(guild_id)
     Current_Server.total_guesses += 1
     
     # Number of guess detection
@@ -116,10 +116,10 @@ async def score(interaction: discord.Interaction):
     guild_id = str(interaction.guild_id) 
     user_id = str(interaction.user.id)
     # return if no active game
-    if not await is_game_active(interaction):
-        await interaction.followup.send("No Active GTT Game")
+    if GTTServers.Get_Server(guild_id) == None:
+        await interaction.followup.send("No Previous GTT Game")
         return
-    Current_Server: GTTMaker = GTTServers.get(guild_id)    
+    Current_Server: GTTMaker = GTTServers.Get_Server(guild_id)    
     player_score = Current_Server.local_scores.get(user_id, 0)
     await interaction.followup.send(f"Your score is {player_score}")
 

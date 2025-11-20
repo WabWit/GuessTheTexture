@@ -2,6 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from modules.Common_FNCS import *
+from modules.data_manager import *
 
 class AdminCog(commands.Cog):
     def __init__(self, bot):
@@ -15,11 +16,7 @@ class AdminCog(commands.Cog):
             return
         print(f"Bot shutting down blame {interaction.user.display_name} from {interaction.guild.name}")
         await interaction.response.defer()
-        dump = {}
-        for guild_id in GTTServers.keys():
-            dump[str(guild_id)] = GTTServers[str(guild_id)].local_scores
-        with open(GTTSERVERS_PATH, "w") as ServersFile:
-            json.dump(dump, ServersFile)
+        save_server_data()
         await interaction.followup.send("Shutting Down")
         await quit()
 
@@ -32,7 +29,7 @@ class AdminCog(commands.Cog):
         await interaction.response.defer()
         Current_Server = None
         if not await is_game_active(interaction):
-            Current_Server = GTTServers.get(guild_id)
+            Current_Server: GTTMaker = GTTServers.Get_Server(guild_id)
             Current_Server.Reset()
         else:
             await interaction.followup.send("A game has already started")
