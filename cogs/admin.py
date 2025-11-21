@@ -31,6 +31,7 @@ class AdminCog(commands.Cog):
         if not await is_game_active(interaction):
             Current_Server: GTTMaker = GTTServers.Get_Server(guild_id)
             Current_Server.Reset()
+            print(Current_Server)
         else:
             await interaction.followup.send("A game has already started")
             return

@@ -45,13 +45,14 @@ class GTTMaker:
             answer = random.choice(IMAGESET_VANILLA)
             file_path = IMAGESET_VANILLA_PATH / answer
             time.sleep(1)
-            
 
         cleaned_answer = Cleaner.clean_string(answer)
         self.original = answer
         self.answer = cleaned_answer
         self.answer_split = cleaned_answer.split()
         self.answer_capped = cleaned_answer.title()
+
+        print(self.original)
     
     def Reset(self):
         self.Roll()

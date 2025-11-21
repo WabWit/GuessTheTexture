@@ -87,6 +87,7 @@ async def answer(interaction: discord.Interaction, answer: str):
     Current_Server.per_user_guesses[user_id] = amount_of_guessses + 1
 
     # Check if the answer is right
+    print(sorted(user_answer.answer_split))
     if sorted(user_answer.answer_split) == sorted(Current_Server.answer_split):
         Current_Server.AddPoints(user_id, 1)
         await interaction.followup.send(f"Correct! The answer was: {Current_Server.answer_capped}")
