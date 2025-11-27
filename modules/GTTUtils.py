@@ -80,7 +80,6 @@ class GTTMaker:
         player_score = self.local_scores.get(str(player_id), 0)
         self.local_scores[str(player_id)] = player_score + amount
 
-
 class AnswerContainer:
     def __init__(self, answer: str):
         cleaned_answer = Cleaner.clean_string(answer)

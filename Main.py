@@ -33,6 +33,7 @@ class GTTBOT(commands.Bot):
 
     async def setup_hook(self):
         await self.load_extension("cogs.admin")
+        await self.load_extension("cogs.player_commands")
 bot = GTTBOT()
 
 # Slash command registration (sync)
@@ -45,20 +46,6 @@ async def on_ready():
     get_saved_data()
 
 # ALL COMMANDS FOR NORMAL PLAYERS
-#sending a picture
-@bot.tree.command(name="image", description="Bumps the current image")
-async def image(interaction: discord.Interaction):
-    if not await is_game_active(interaction):
-        await interaction.response.send_message("No Active GTT Game, go tell <@292608557335969793> to start one")
-        return
-    await interaction.response.defer()
-    await send_image(interaction, "Here is the image:")
-
-@image.error
-async def image_error(interaction, error):
-    if isinstance(error, commands.CommandOnCooldown):
-        await interaction.response.send("TOO FAST!")
-
 #answer command
 @bot.tree.command(name="answer", description="are you sure?")
 async def answer(interaction: discord.Interaction, answer: str):
@@ -74,6 +61,7 @@ async def answer(interaction: discord.Interaction, answer: str):
     Current_Server: GTTMaker = GTTServers.Get_Server(guild_id)
     Current_Server.total_guesses += 1
     
+    # TODO: Repurpose Cleaner to phrase randomizer and include the function below
     # Number of guess detection
     GuessIndicator = ""
     amount_of_guessses = Current_Server.per_user_guesses.get(user_id, 0)
@@ -109,19 +97,5 @@ async def answer(interaction: discord.Interaction, answer: str):
     
     hint_string = Hint.HintChecker(Current_Server.answer, Current_Server.words_guessed)  
     await interaction.followup.send(discord.utils.escape_markdown(f"Looks like yall are having trouble, heres a hint: {hint_string}"))
-
-#check score
-@bot.tree.command(name="score", description="Checks a player's score")
-async def score(interaction: discord.Interaction):
-    await interaction.response.defer()
-    guild_id = str(interaction.guild_id) 
-    user_id = str(interaction.user.id)
-    # return if no active game
-    if GTTServers.Get_Server(guild_id) == None:
-        await interaction.followup.send("No Previous GTT Game")
-        return
-    Current_Server: GTTMaker = GTTServers.Get_Server(guild_id)    
-    player_score = Current_Server.local_scores.get(user_id, 0)
-    await interaction.followup.send(f"Your score is {player_score}")
 
 bot.run(TOKEN)

@@ -10,7 +10,7 @@ class AdminCog(commands.Cog):
 
     @app_commands.command(name="quit", description="back to the gulag")
     async def exit(self, interaction : discord.Interaction):
-        
+        print("why would you do this")
         if not await Check_Perms(interaction, "Admin"):
             await interaction.response.send_message("Admin only command!", ephemeral=True)
             return
@@ -43,8 +43,8 @@ async def setup(bot: commands.Bot) -> None:
     # finally, adding the cog to the bot
     await bot.add_cog(AdminCog(bot=bot))
 
-
-'''
+# !THIS IS AN EXAMPLE OF A COOLDOWN COMMAND !
+''' 
     @app_commands.command(name="pingcd")
     @app_commands.checks.cooldown(1,5)
     async def pingcd(self, interaction: discord.Interaction):
