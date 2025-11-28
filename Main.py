@@ -8,6 +8,7 @@ from discord.ext import commands
 from discord import app_commands
 from pathlib import Path
 from modules import Hint
+from modules.Unbound_FNCS import Get_Time_Difference
 from modules.GTTUtils import *
 from modules.Common_FNCS import *
 from modules.data_manager import *
@@ -78,6 +79,10 @@ async def answer(interaction: discord.Interaction, answer: str):
     print(sorted(user_answer.answer_split))
     if sorted(user_answer.answer_split) == sorted(Current_Server.answer_split):
         Current_Server.AddPoints(user_id, 1)
+        if Get_Time_Difference(Current_Server.time_list["SaveTimer"]) >= 600:
+            save_server_data()
+            Current_Server.time_list["SaveTimer"] = int(time.time())
+            print(f"Saved server data after correct answer at time {Current_Server.time_list['SaveTimer']}")
         await interaction.followup.send(f"Correct! The answer was: {Current_Server.answer_capped}")
         Current_Server.Reset()
         await send_image(interaction, "For the next image:")

@@ -4,6 +4,8 @@ import discord
 from discord.ext import commands
 from modules import Cleaner
 from pathlib import Path
+#from modules.Unbound_FNCS import Get_Time_Difference
+#from modules.data_manager import save_server_data
 
 BASE_DIR = Path(__file__).parent.parent
 FILENAMES_PATH = BASE_DIR / "Data" / "filenames.txt"
@@ -28,7 +30,8 @@ class GTTMaker:
         self.words_guessed = []
         Time = {
             "Debounce": int(time.time()),
-            "Rolled": int(time.time())
+            "Rolled": int(time.time()),
+            "SaveTimer": int(time.time())
             }
         self.time_list = Time
         self.local_scores = local_scores
@@ -61,8 +64,14 @@ class GTTMaker:
         self.per_user_guesses = {}
         self.words_guessed = []
 
+        #if Get_Time_Difference(self.time_list["SaveTimer"]) >= 30:
+        #    save_server_data()
+        #    print("Auto-saved server data")
+        #    self.time_list["SaveTimer"] = int(time.time())
+
     def TimeReset(self, to_reset_list = None):
         if to_reset_list is None:
+            # Reset Mandatory timers
             to_reset_list = ["Debounce", "Rolled"]
         for to_reset in to_reset_list:
             match to_reset:

@@ -1,6 +1,7 @@
 # ASYNC FUNCTIONS
 import discord
 import json
+import time
 from pathlib import Path
 from modules.GTTUtils import *
 from modules.data_manager import *
@@ -42,4 +43,3 @@ async def Check_Perms(interaction, type = "Admin") -> bool:
         if interaction.user.id not in Admins:
             return False
         return True
-# Start the bot
